@@ -1,0 +1,428 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import seaborn as sns
+import numpy as np
+import cx_Oracle
+import imageio
+import flask
+from flask import request, jsonify, send_file
+import random
+from moviepy.editor import ImageClip, concatenate
+import moviepy.video.fx.all as vfx
+import requests
+from skimage import transform
+import numpy as np
+
+from natsort import natsorted
+import glob
+
+from moviepy.editor import *
+import moviepy.editor as mp
+import pandas as pd
+import numpy as np
+from sklearn.metrics import confusion_matrix
+from sklearn.naive_bayes import MultinomialNB
+from tkinter import *
+import joblib
+import os
+from tkinter import *
+from tkinter.messagebox import *
+from PIL import Image, ImageTk  # module to put ////////////////////image in tkinter
+import PIL
+import pickle
+import tkinter as tk
+from tkinter import messagebox
+import time
+from slide_show import slide_show
+from slide_show_zoomIn import slide_show_zoomIn
+from slide_show_zoomOut import slide_show_zoomOut
+from add_text_anim import add_text_anim
+from add_text_anim_videos import add_text_anim_videos
+from datetime import datetime
+import os
+from video_tool import video_tool
+
+
+
+
+# import app
+from flask import Flask, request, redirect, jsonify
+from werkzeug.utils import secure_filename
+
+from flask import Flask, jsonify, request
+import json
+
+
+
+app = flask.Flask(__name__)
+
+
+####### Multiple or Single Image Upload with file name changed according to current datetime with milli seconds in png#########
+
+
+UPLOAD_FOLDER = 'C:/Users/user/Downloads/AI Video Engine - Copy/uploads'  # 'C:/uploads'
+UPLOAD_VIDEO_FOLDER = 'C:/Users/user/Downloads/AI Video Engine - Copy/upload_video'
+UPLOAD_AUDIO_FOLDER = 'C:/Users/user/Downloads/AI Video Engine - Copy/upload_audio'
+UPLOAD_LOGO_FOLDER = 'C:/Users/user/Downloads/AI Video Engine - Copy/upload_logo'
+
+app = Flask(__name__)
+app.secret_key = "secret key"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+video_file_name = None
+audio_file_name = None
+logo_file_name = None
+contents= None
+
+ALLOWED_EXTENSIONS = set(['mp4', 'mp3', 'png', 'jpg', 'jpeg', 'mov','wav'])
+
+images_name_array = []
+
+video_file_name=[]
+audio_file_name=[]
+logo_file_name=[]
+contents=[]
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/<string:MERCHANT_ID>/multiple-files-upload', methods=['POST'])
+def upload_file(MERCHANT_ID):
+    # check if the post request has the file part
+    # if not request.files.get('file', None):
+    #     pass
+
+    if request.method == 'POST' and 'images_files[]'  in request.files:
+        images_name_array.clear()
+        print(request.files)
+        # elif 'file' not in request.files:
+        #     resp = jsonify({'message': 'No file part in the request'})
+        #     resp.status_code = 400
+        #     return resp
+        files = request.files.getlist('images_files[]')
+        file2 = request.files.getlist('file')
+        #video_file=request.files['file']
+        print(files)
+
+        errors = {}
+        success = False
+        for file in files:
+            if file and allowed_file(file.filename):
+                date = datetime.now().strftime("%f_%p")
+                file.filename = file.filename.replace(file.filename, MERCHANT_ID + '.' + date + '.png')
+                print(file.filename)
+                #  global images_name_array
+                images_name_array.append(file.filename)
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                success = True
+            images=images_name_array
+
+
+        return jsonify({'images_files':images})
+
+        # else:
+        # errors[file.filename] = 'File type is not allowed'
+
+
+        #
+    elif request.method == 'POST' and 'video_files[]' in request.files:
+        video_file_name.clear()
+        print(request.files)
+        # elif 'file' not in request.files:
+        #     resp = jsonify({'message': 'No file part in the request'})
+        #     resp.status_code = 400
+        #     return resp
+        files = request.files.getlist('video_files[]')
+        #file2 = request.files.getlist('file')
+        # video_file=request.files['file']
+        print(files)
+
+        errors = {}
+        success = False
+        for file in files:
+            if file and allowed_file(file.filename):
+                date = datetime.now().strftime("%f_%p")
+                file.filename = file.filename.replace(file.filename, MERCHANT_ID + '.' + date + '.mp4' or '.mov')
+                print(file.filename)
+                #  global images_name_array
+                video_file_name.append(file.filename)
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(UPLOAD_VIDEO_FOLDER, filename))
+                success = True
+            video=video_file_name
+        return jsonify({'video_file':video})
+
+
+    elif request.method == 'POST' and 'audio_files[]' in request.files:
+        audio_file_name.clear()
+        print(request.files)
+        # elif 'file' not in request.files:
+        #     resp = jsonify({'message': 'No file part in the request'})
+        #     resp.status_code = 400
+        #     return resp
+        files = request.files.getlist('audio_files[]')
+        # file2 = request.files.getlist('file')
+        # video_file=request.files['file']
+        print(files)
+
+        errors = {}
+        success = False
+        for file in files:
+            if file and allowed_file(file.filename):
+                date = datetime.now().strftime("%f_%p")
+                file.filename = file.filename.replace(file.filename, MERCHANT_ID + '.' + date + '.mp3' or '.wav')
+                print(file.filename)
+                #  global images_name_array
+                audio_file_name.append(file.filename)
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(UPLOAD_AUDIO_FOLDER, filename))
+                success = True
+            audio=audio_file_name
+        return jsonify({'audio_file': audio})
+
+    elif request.method == 'POST' and 'logo_files[]' in request.files:
+        logo_file_name.clear()
+        print(request.files)
+        # elif 'file' not in request.files:
+        #     resp = jsonify({'message': 'No file part in the request'})
+        #     resp.status_code = 400
+        #     return resp
+        files = request.files.getlist('logo_files[]')
+        # file2 = request.files.getlist('file')
+        # video_file=request.files['file']
+        print(files)
+
+        errors = {}
+        success = False
+        for file in files:
+            if file and allowed_file(file.filename):
+                date = datetime.now().strftime("%f_%p")
+                file.filename = file.filename.replace(file.filename, MERCHANT_ID + '.' + date + '.png' or '.jpg')
+                print(file.filename)
+                #  global images_name_array
+                logo_file_name.append(file.filename)
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(UPLOAD_LOGO_FOLDER, filename))
+                success = True
+            logo=logo_file_name
+        return jsonify({'logo_file':logo})
+
+    elif request.method == 'POST' and "text" in str(request.get_data()):
+        content = request.get_json()
+        #content=json.loads(request.json)
+        print(content)
+
+        # for i in content:
+        #     contents.append(i['text'])#use for loop
+    return jsonify({'texts': content})
+        #return 'yes'
+        # if len(str(content)) > 255:
+        #
+        #     print('Error While Inserting The Data, Something Went Wrong Try Again!')
+        #     resp = jsonify({'message': 'Character limit is 255 !!'})
+        #     resp.status_code = 400
+        #     return resp
+        #
+        #
+        # else:
+        #     contents = [content[0]['text'], content[1]['text']]
+        #     return jsonify(contents)
+@app.route('/<string:MERCHANT_ID>/upload', methods=['POST'])
+def create_video(MERCHANT_ID):
+    data = request.get_json()
+    if 'video_file' not in data:
+
+        images = str(data['images_files'])
+        video=None
+        print(images)
+        print(type(images))
+        print('------------------------------------------------')
+
+
+    else:
+        # data['images_files'] not in data
+        video=str(data['video_file'])
+        images= None
+        print(video)
+        print(type(video))
+        print('------------------------------------------------')
+
+
+    audio=str(data['audio_file'])
+    print(audio)
+    print(type(audio))
+    print('------------------------------------------------')
+
+
+
+    logo=str(data['logo_file'])
+    print(logo)
+    print(type(logo))
+    print('------------------------------------------------')
+
+    texts=[]
+    for i in data['texts']:
+        print(i)
+        text=i['text'].split() #change the data type in db
+
+        #text=text.strip("[ ]")
+
+        # #text=str(texts)
+      #  text=text.replace(" [' ', ' ']", " ' ', ' '")
+        #print(text)
+        texts.append(text)
+
+    texts=str(texts)
+    print(texts)
+    print(type(texts))
+    print('------------------------------------------------')
+
+    merchant_id=str(MERCHANT_ID)
+
+    random_number= random.randint(3,10000 )
+    now = datetime.now()
+    dt_string = now.strftime("%d-%m-%Y-%H:%M:%S")
+    random_number=str(random_number)
+    dt_string=str(dt_string)
+    video_id =random_number + '-' + dt_string
+    print(video_id)
+    print(type(video_id))
+
+
+    try:
+        connection = cx_Oracle.connect("admin/Faiqalifarooqui12@eshop.cbp5pk0tdqap.us-east-2.rds.amazonaws.com:1521/orcl")
+    except Exception as err:
+        print("Error While Creating Connection to DB,Something went wrong try again!!")
+        resp = jsonify({'message': 'Something Went Wrong!!'})
+        resp.status_code = 400
+        return resp
+    else:
+        try:
+            rows = [(video_id,merchant_id,images,video,audio,logo,texts)]
+            print(rows)
+            cursor = connection.cursor()
+            cursor.executemany("""INSERT INTO VIDEO_DATA(VIDEO_ID,MERCHANT_ID,IMAGES,VIDEO,AUDIO,LOGO,TEXTS_USER)VALUES (:1,:2,:3,:4,:5,:6,:7)""", rows) #change TEXTS_USER
+            connection.commit()
+            # cursor.execute("SELECT VIDEO_ID FROM VIDEO_DATA WHERE IMAGES=:idbv ",images)
+            # r= cursor.fetchone()
+            # print(r)
+        except Exception as err:
+            print('Error While Inserting The Data, Something Went Wrong Try Again!')
+            resp = jsonify({'message': 'Error While Inserting The Data, Something Went Wrong Try Again!!'})
+            resp.status_code = 400
+            return resp
+        else:
+            print("Insert Completed")
+            resp = jsonify({'message': 'Data successfully uploaded your video id is ' + video_id })
+            resp.status_code = 201
+            return resp
+    finally:
+        cursor.close()
+        connection.close()
+
+
+@app.route(
+    '/MERCHANT_ID/<string:MERCHANT_ID>/VIDEO_ID/<string:VIDEO_ID>/BRANCH_ID/<string:BRANCH_ID>/CUSTOMER_ID/<string:CUSTOMER_ID>/')  # http://127.0.0.1:5000/BRANCH_ID/4c52d840bf2648f4909d9a7ea44f09ef/CUSTOMER_ID/8591f329347a4dbb8c832cd5239d8327
+def show_username(MERCHANT_ID,VIDEO_ID,BRANCH_ID, CUSTOMER_ID):
+    try:
+        video_data_list = []
+        l = []  # empty list to store iterated values.
+        ############################ Established Connection to Oracle DataBase ###############################################
+        connection = cx_Oracle.connect(
+            "admin/Faiqalifarooqui12@eshop.cbp5pk0tdqap.us-east-2.rds.amazonaws.com:1521/orcl")
+        cursor1 = connection.cursor()
+
+        ###The Provided BRANCH_ID & Customer ID in the URL will be add in the query in :idbv, so that only filterred query return####
+        cursor1.execute("SELECT * FROM AI_VIDEO_MESSAGE WHERE BRANCH_ID= :idbv AND CUSTOMER_ID = :idbv",
+                       [BRANCH_ID, CUSTOMER_ID])
+        r = cursor1.fetchone()
+        data = r[2:]
+
+        cursor2 = connection.cursor()
+        cursor2.execute("SELECT IMAGES,VIDEO,AUDIO,LOGO,TEXTS_USER FROM VIDEO_DATA WHERE VIDEO_ID= :idbv AND MERCHANT_ID = :idbv",
+                       [VIDEO_ID, MERCHANT_ID])
+        video_data=cursor2.fetchone()
+        print(video_data)
+
+        # cursor3=connection.cursor()
+        # cursor3.execute("SELECT TEXTS_USER FROM VIDEO_DATA WHERE VIDEO_ID= :idbv AND MERCHANT_ID = :idbv",
+        #                [VIDEO_ID, MERCHANT_ID])
+        # video_data_user_text=cursor3.fetchone()
+        # video_data_user_text=list(video_data_user_text)
+        # print(video_data_user_text[0])
+
+
+          # it will fetch the first row as tupple where BRANCH_ID & customer id is matched.
+        #     print(r)
+          # The first two COLUMNS contains BRANCH_ID & CUSTOMER_ID so we slice data.
+
+        #####Now we iterate over data tupple according to index and only take those values which are not equal to 0 and append in list
+        for i, var in enumerate(data):
+            if i == 0 and var != 0:
+                l.append('The Successfull orders' + ' ' + str(var))
+            elif i == 1 and var != 0:
+                l.append('Total Items You Bought' + ' ' + str(var))
+            elif i == 2 and var != 0:
+                l.append('Voucher and promotional discount you avail' + ' ' + str(var))
+            elif i == 3 and var != 0:
+                l.append('Sum of the Gross Price' + ' ' + str(var))
+            elif i == 4 and var != 0:
+                l.append('Saved By Discount' + ' ' + str(var))
+            elif i == 5 and var != 0:
+                l.append('Rated Best Item' + ' ' + str(var))
+            elif i == 6 and var != 0:
+                l.append('Days Since Last Order' + ' ' + str(var))
+
+        output = random.sample(l, 2)  # This will return two unique random string from a list.
+       # x = output  # this will return 1 random value in response as JSON.
+        #for i in range(2):
+        # x=video_data[0]
+        # print(x)
+
+        for x in video_data:
+            if x != None :
+                #x =x.strip("[' ']")
+                #x=x[1:-1]
+                video_data_list.append(x)
+
+            # else:
+            #     x=x.split()
+            #     x.replace("' '\"[]", " ")
+            #     #x = x.strip("['" ,"']]")
+            #     # x=x[1:-1]
+            #     video_data_list.append(x)
+            #     counter += 1
+        #video_data_list.append("zain")
+        video_data_list.append(output[0])
+        video_data_list.append((output[1]))
+
+       # print(video_data_list)
+
+        print("This is the list",video_data_list)
+        video_tool(MERCHANT_ID, video_data_list)
+        return MERCHANT_ID
+        #return video_data_user_text[0]
+
+    except Exception as  e:
+        print('Error While Loading The Data, Something Went Wrong Try Again!')
+        resp = jsonify({'message': 'Error While Loading The Data, Something Went Wrong Try Again!!'})
+        resp.status_code = 400
+        return resp
+
+    finally:
+        cursor1.close()
+        cursor2.close()
+        #cursor3.close()
+        connection.close()
+
+
+# Initialization is done once at startup time
+#
+if __name__ == '__main__':
+    # Start a webserver
+    app.run(port=5000)

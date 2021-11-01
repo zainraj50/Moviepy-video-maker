@@ -1,0 +1,371 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import seaborn as sns
+import numpy as np
+import cx_Oracle
+import imageio
+import flask
+from flask import request, jsonify, send_file
+import random
+from moviepy.editor import ImageClip, concatenate
+import moviepy.video.fx.all as vfx
+
+from skimage import transform
+import numpy as np
+
+from natsort import natsorted
+import glob
+
+from moviepy.editor import *
+import moviepy.editor as mp
+import pandas as pd
+import numpy as np
+from sklearn.metrics import confusion_matrix
+from sklearn.naive_bayes import MultinomialNB
+from tkinter import *
+import joblib
+import os
+from tkinter import *
+from tkinter.messagebox import *
+from PIL import Image, ImageTk  # module to put ////////////////////image in tkinter
+import PIL
+import pickle
+import tkinter as tk
+from tkinter import messagebox
+import time
+from slide_show import slide_show
+from add_text_anim import add_text_anim
+from add_text_anim_videos import add_text_anim_videos
+from datetime import datetime
+import os
+from moviepy.editor import *
+import moviepy.editor as mp
+import pandas as pd
+import numpy as np
+from sklearn.metrics import confusion_matrix
+from sklearn.naive_bayes import MultinomialNB
+from tkinter import *
+import joblib
+import os
+from tkinter import *
+from tkinter.messagebox import *
+from PIL import Image, ImageTk  # module to put ////////////////////image in tkinter
+import PIL
+import pickle
+import tkinter as tk
+from tkinter import messagebox
+import time
+from slide_show import slide_show
+from add_text_anim import add_text_anim
+from add_text_anim_videos import add_text_anim_videos
+
+
+def image_to_video(file=r'C:\Users\user\Downloads\Towards Headlines\Test1.mp4',
+                   logo=r"C:\Users\user\Downloads\Towards Headlines\Towards Headlines-logo\profile.png",
+                   audio=r'C:\Users\user\Downloads\Towards Headlines\Alex-Production.mp3', text_1='zain', text_2='11',
+                   heading_text1='no text provided', heading_text2='no text provided'):
+    if file.endswith(('.mp4', '.mov', '.wmv', '.avi')):
+        add_text_anim_videos(file, logo, audio, text_1, text_2, heading_text1, heading_text2)
+        print("video is Ready")
+
+    else:
+        slide_show(file)
+        #        time.sleep(360)
+        add_text_anim(r'C:\Users\user\Downloads\AI Video Engine\Test1.mp4', logo, audio, text_1, text_2, heading_text1,
+                      heading_text2)
+        print("video is Ready")
+        # except:
+        #     print("Something Went Wrong!, please report the error so we can fixed it!")
+
+
+app = flask.Flask(__name__)
+from flask import Flask
+import os
+import urllib.request
+# import app
+from flask import Flask, request, redirect, jsonify
+from werkzeug.utils import secure_filename
+
+####### Multiple or Single Image Upload with file name changed according to current datetime with milli seconds in png#########
+
+
+UPLOAD_FOLDER = 'C:/Users/user/Downloads/AI Video Engine - Copy/uploads'  # 'C:/uploads'
+
+app = Flask(__name__)
+app.secret_key = "secret key"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+# video_file_name = None
+# audio_file_name = None
+logo_file_name = None
+
+ALLOWED_EXTENSIONS = set(['mp4', 'mp3', 'png', 'jpg', 'jpeg', 'txt'])
+global images_name_array
+global video_file_name
+global audio_file_name
+images_name_array = []
+video_file_name=[]
+audio_file_name=[]
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/<string:MERCHANT_ID>/multiple-files-upload', methods=['POST'])
+def upload_file(MERCHANT_ID):
+    # check if the post request has the file part
+    if 'files[]' not in request.files:
+        resp = jsonify({'message': 'No file part in the request'})
+        resp.status_code = 400
+        return resp
+    files = request.files.getlist('files[]')
+    print(files)
+
+    errors = {}
+    success = False
+
+    for file in files:
+        if file and allowed_file(file.filename):
+            date = datetime.now().strftime("%f_%p")
+            file.filename = file.filename.replace(file.filename, MERCHANT_ID + '.' + date + '.png')
+            print(file.filename)
+            global images_name_array
+            images_name_array.append(file.filename)
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            success = True
+
+
+        else:
+            errors[file.filename] = 'File type is not allowed'
+
+        x = type(images_name_array[0])
+        print(images_name_array)
+        print(x)
+    if success and errors:
+        errors['message'] = 'File(s) successfully uploaded'
+        resp = jsonify(errors)
+        resp.status_code = 500
+        return resp
+    if success:
+        resp = jsonify({'message': 'Files successfully uploaded'})
+        resp.status_code = 201
+        return resp
+    else:
+        resp = jsonify(errors)
+        resp.status_code = 500
+        return resp
+
+
+###### Single Video file upload & name change with current datetime and milliseconds ###################################
+
+UPLOAD_VIDEO_FOLDER = 'C:/Users/user/Downloads/AI Video Engine - Copy/upload_video'
+
+app.config['UPLOAD_VIDEO_FOLDER'] = UPLOAD_VIDEO_FOLDER
+ALLOWED_VIDEO_EXTENSIONS = set(['mp4', 'mov'])
+
+
+def allowed_video_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
+
+
+@app.route('/<string:MERCHANT_ID>/file-upload-video', methods=['POST'])
+def upload_video_file(MERCHANT_ID):
+    # video_file_name=[]
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        resp = jsonify({'message': 'No file part in the request'})
+        resp.status_code = 400
+        return resp
+    file = request.files['file']
+    if file.filename == '':
+        resp = jsonify({'message': 'No file selected for uploading'})
+        resp.status_code = 400
+        return resp
+
+    if file and allowed_video_file(file.filename):
+        date = datetime.now().strftime("%f_%p")
+        file.filename = file.filename.replace(file.filename, MERCHANT_ID + '.' + date + '.mp4' or '.mov')
+        print(file.filename)
+        global video_file_name
+        video_file_name.append(file.filename)
+        filename = secure_filename(file.filename)
+
+
+        #video_file_name = filename
+        file.save(os.path.join(app.config['UPLOAD_VIDEO_FOLDER'], filename))
+
+        resp = jsonify({'message': 'File successfully uploaded'})
+        resp.status_code = 201
+        return resp
+    else:
+        resp = jsonify({'message': 'Allowed file types are mp4, mov'})
+        resp.status_code = 400
+        return resp
+
+    ################### Upload Audio#####################################
+
+
+UPLOAD_AUDIO_FOLDER = 'C:/Users/user/Downloads/AI Video Engine - Copy/upload_audio'
+
+app.config['UPLOAD_AUDIO_FOLDER'] = UPLOAD_AUDIO_FOLDER
+ALLOWED_AUDIO_EXTENSIONS = set(['mp3', 'wav'])
+
+
+def allowed_audio_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_AUDIO_EXTENSIONS
+
+
+@app.route('/<string:MERCHANT_ID>/file-upload-audio', methods=['POST'])
+def upload_audio_file(MERCHANT_ID):
+    # audio_file_name=[]
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        resp = jsonify({'message': 'No file part in the request'})
+        resp.status_code = 400
+        return resp
+    file = request.files['file']
+    if file.filename == '':
+        resp = jsonify({'message': 'No file selected for uploading'})
+        resp.status_code = 400
+        return resp
+
+    if file and allowed_audio_file(file.filename):
+        date = datetime.now().strftime("%f_%p")
+        file.filename = file.filename.replace(file.filename, MERCHANT_ID + '.' + date + '.mp3' or '.wav')
+        print(file.filename)
+        global audio_file_name
+        audio_file_name.append(file.filename)
+        # file_filename=str(file.filename)
+        filename = secure_filename(file.filename)
+
+
+        # audio_file_name = None
+        # audio_file_name = filename
+        file.save(os.path.join(app.config['UPLOAD_AUDIO_FOLDER'], filename))
+
+        resp = jsonify({'message': 'File successfully uploaded'})
+        resp.status_code = 201
+        return resp
+    else:
+        resp = jsonify({'message': 'Allowed file types are mp3, wav'})
+        resp.status_code = 400
+        return resp
+
+
+################# upload Logo ##########################################
+UPLOAD_LOGO_FOLDER = 'C:/Users/user/Downloads/AI Video Engine - Copy/upload_logo'
+
+app.config['UPLOAD_LOGO_FOLDER'] = UPLOAD_LOGO_FOLDER
+ALLOWED_LOGO_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+
+
+def allowed_logo_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_LOGO_EXTENSIONS
+
+
+@app.route('/<string:MERCHANT_ID>/file-upload-logo', methods=['POST'])
+def upload_logo_file(MERCHANT_ID):
+    # logo_file_name=[]
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        resp = jsonify({'message': 'No file part in the request'})
+        resp.status_code = 400
+        return resp
+    file = request.files['file']
+    if file.filename == '':
+        resp = jsonify({'message': 'No file selected for uploading'})
+        resp.status_code = 400
+        return resp
+
+    if file and allowed_logo_file(file.filename):
+        date = datetime.now().strftime("%f_%p")
+        file.filename = file.filename.replace(file.filename, MERCHANT_ID + '.' + date + '.png' or 'jpeg')
+        print(file.filename)
+        # logo_file_name.append(file.filename)
+        filename = secure_filename(file.filename)
+
+        global logo_file_name
+        logo_file_name = None
+        logo_file_name = filename
+        file.save(os.path.join(app.config['UPLOAD_LOGO_FOLDER'], filename))
+
+        resp = jsonify({'message': 'File successfully uploaded'})
+        resp.status_code = 201
+        return resp
+    else:
+        resp = jsonify({'message': 'Allowed file types are png, jpeg, jpg'})
+        resp.status_code = 400
+        return resp
+
+
+@app.route('/<string:MERCHANT_ID>/make-video', methods=['POST'])
+def create_video(MERCHANT_ID):
+    try:
+        connection = cx_Oracle.connect(
+            "admin/Faiqalifarooqui12@eshop.cbp5pk0tdqap.us-east-2.rds.amazonaws.com:1521/orcl")
+    except Exception as err:
+        print("Error While Creating Connection to DB,Something went wrong try again!!")
+        resp = jsonify({'message': 'Something Went Wrong!!'})
+        resp.status_code = 400
+        return resp
+    else:
+        try:
+            images = str(images_name_array)
+            video_name = str(video_file_name)
+            audio_name= str(audio_file_name)
+            # global video_file_name
+            # global audio_file_name
+            global logo_file_name
+
+            # video_name = video_file_name
+            # audio_name = audio_file_name
+            logo_name =  logo_file_name
+
+            images_name_array.clear()
+            video_file_name.clear()
+            audio_file_name.clear()
+            # video_file_name=None
+            # audio_file_name=None
+            logo_file_name=None
+            merchant_id=str(MERCHANT_ID)
+
+            rows = [(merchant_id,images, video_name, audio_name, logo_name)]
+
+
+            cursor = connection.cursor()
+            cursor.executemany("""INSERT INTO VIDEO_DATA(MERCHANT_ID,IMAGES,VIDEO,AUDIO,LOGO)VALUES (:1,:2,:3,:4,:5)""", rows)
+            connection.commit()
+            print(rows)
+            rows=None
+            print(None)
+
+
+
+        except Exception as err:
+            print('Error While Inserting The Data, Something Went Wrong Try Again!')
+            resp = jsonify({'message': 'Something Went Wrong!!'})
+            resp.status_code = 400
+            return resp
+
+        else:
+            print("Insert Completed")
+
+
+            resp = jsonify({'message': 'Video successfully made'})
+            resp.status_code = 201
+            return resp
+    finally:
+        cursor.close()
+        connection.close()
+
+
+
+# print(video_file_name)
+# print(audio_file_name)
+# print(logo_file_name)
+if __name__ == "__main__":
+    app.run(port=5000)
