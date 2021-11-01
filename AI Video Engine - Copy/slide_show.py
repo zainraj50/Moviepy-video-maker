@@ -42,7 +42,9 @@ screensize = (1920, 1080) #2k common high defination video often reffered as 108
 #         # Zoom-out.
 
 
-def slide_show(merchant_id,images=[]):
+def slide_show(merchant_id,images=None):
+    if images is None:
+        images = []
     ####################### Saving images in a list to calculate number of images ##########################
     # no_of_images=[]
     # for image in natsorted(

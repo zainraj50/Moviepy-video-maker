@@ -55,7 +55,9 @@ from add_text_anim import add_text_anim
 
 #print(a)
 #print(b)
-def video_tool(merchant_id,lst=[]):
+def video_tool(merchant_id,lst=None):
+    if lst is None:
+        lst = []
     new_lst=[]
     for list in lst:
         new_lst.append(list.strip(" ['  '] ']['"))
