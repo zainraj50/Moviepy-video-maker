@@ -81,46 +81,26 @@ def video_tool(merchant_id,lst=None):
         add_text_anim(first_path,logo_path,audio_path,new_lst[-1],new_lst[-2],a,b,merchant_id)
         print("video is Ready")
         return "video is ready"
+    lst_images=[]
+    lst=new_lst[0].split()
+    for i in lst:
+        data=i.strip(" '," )
+        first_path = r"C:\Users\user\Downloads\AI Video Engine - Copy\uploads"
+        first_path = os.path.join(first_path, data)
+        lst_images.append(first_path)
 
-    else:
-        lst_images=[]
-        lst=new_lst[0].split()
-        for i in lst:
-            data=i.strip(" '," )
-            first_path = r"C:\Users\user\Downloads\AI Video Engine - Copy\uploads"
-            first_path = os.path.join(first_path, data)
-            lst_images.append(first_path)
+    slide_show(merchant_id,lst_images)
+    for i, j in enumerate(new_lst):
+        if i == 3:
+            a, b = j.split()
+            a = a.strip("'],")  # use this when adding text
+            b = b.strip("['")
 
-        slide_show(merchant_id,lst_images)
-        for i, j in enumerate(new_lst):
-            if i == 3:
-                a, b = j.split()
-                a = a.strip("'],")  # use this when adding text
-                b = b.strip("['")
+    temp_video_path = r"C:\Users\user\Downloads\AI Video Engine - Copy\saved_slide_show"
+    temp_video_path = os.path.join(temp_video_path, merchant_id + '.mp4')
+    add_text_anim(temp_video_path, logo_path, audio_path, new_lst[-1], new_lst[-2], a, b,merchant_id)
 
-        temp_video_path = r"C:\Users\user\Downloads\AI Video Engine - Copy\saved_slide_show"
-        temp_video_path = os.path.join(temp_video_path, merchant_id + '.mp4')
-        add_text_anim(temp_video_path, logo_path, audio_path, new_lst[-1], new_lst[-2], a, b,merchant_id)
-
-        return "video is ready"
-
-
-#video_tool(merchant_id,lst)
-
-    #print(lst_images)
-#     first_path = r"C:\Users\user\Downloads\AI Video Engine - Copy\uploads"
-#     first_path = os.path.join(first_path, lst[0])
-#     slide_show(first_path)
-# #        time.sleep(360)
-#     add_text_anim(first_path,logo_path,audio_path,lst[-1],lst[-2],a,b)
-#     print("video is Ready")
-        # except:
-        #     print("Something Went Wrong!, please report the error so we can fixed it!")
-
-
-
-#image_to_video(r'C:\Users\user\Downloads\AI Video Engine - Copy\Test1.mp4', r"C:\Users\user\Downloads\Towards Headlines\Towards Headlines-logo\profile.png",r'C:\Users\user\Downloads\Towards Headlines\Alex-Production.mp3',
-              # 'Api Text','Api Text','no one but every one!', 'd')
+    return "video is ready"
 
 
 
