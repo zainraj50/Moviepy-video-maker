@@ -32,13 +32,7 @@ screensize = (1920, 1080) #2k common high defination video often reffered as 108
 def resize_func(t):
     if t < 40:
         return 1 + 0.02 * t  # Zoom-in.# 6 < t
-
-    #     elif 4 <= t <= 6:
-    #         return 1 + 0.02*4  # Stay.
-    else:
-        return 1 + 0.02 * (duration - t)
-
-        # Zoom-out.
+    return 1 + 0.02 * (duration - t)
 
 
 def slide_show_zoomIn(path):
