@@ -11,13 +11,11 @@ import glob
 from moviepy.editor import *
 import moviepy.editor as mp
 import pandas as pd
-import numpy as np
 from sklearn.metrics import confusion_matrix
 from sklearn.naive_bayes import MultinomialNB
 from tkinter import *
 import joblib
 import os
-from tkinter import *
 from tkinter.messagebox import *
 from PIL import Image, ImageTk  #module to put ////////////////////image in tkinter
 import PIL
